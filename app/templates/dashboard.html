@@ -1,0 +1,49 @@
+{% extends "base.html" %}{% block title %}Dashboard · PocketLedger{% endblock %}
+{% block head %}<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+ <div><h1 class="h2 mb-1">Dashboard</h1><p class="text-muted mb-0">Your financial overview for {{ month }}.</p></div>
+ <a class="btn btn-primary" href="{{ url_for('transactions.add_transaction') }}">+ Add transaction</a>
+</div>
+<form class="row g-2 mb-4" method="get">
+ <div class="col-auto"><input class="form-control" type="month" name="month" value="{{ month }}"></div>
+ <div class="col-auto"><button class="btn btn-outline-secondary">View month</button></div>
+</form>
+<div class="row g-3 mb-4">
+ <div class="col-md-4"><div class="summary-card income"><span>Income</span><strong>₹{{ "%.2f"|format(income|float) }}</strong></div></div>
+ <div class="col-md-4"><div class="summary-card expense"><span>Expenses</span><strong>₹{{ "%.2f"|format(expenses|float) }}</strong></div></div>
+ <div class="col-md-4"><div class="summary-card balance"><span>Net balance</span><strong>₹{{ "%.2f"|format(balance|float) }}</strong></div></div>
+</div>
+<div class="row g-4">
+ <div class="col-lg-7"><div class="card p-3 h-100"><h2 class="h5">Expense by category</h2>
+  {% if category_labels %}<canvas id="categoryChart" height="230"></canvas>{% else %}<p class="text-muted my-5 text-center">No expense entries for this month yet.</p>{% endif %}
+ </div></div>
+ <div class="col-lg-5"><div class="card p-3 h-100"><h2 class="h5">Monthly budget</h2>
+  <form method="post" action="{{ url_for('transactions.save_budget') }}" class="mb-3">
+   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+   <input type="hidden" name="month" value="{{ month }}">
+   <div class="input-group"><span class="input-group-text">₹</span><input class="form-control" type="number" min="0.01" step="0.01" name="amount" placeholder="Set monthly limit" value="{{ budget.amount if budget else '' }}" required><button class="btn btn-outline-primary">Save</button></div>
+  </form>
+  {% if budget %}
+   <div class="d-flex justify-content-between"><span>Spent</span><strong>₹{{ "%.2f"|format(budget_used|float) }} / ₹{{ "%.2f"|format(budget.amount|float) }}</strong></div>
+   {% set pct = (budget_used|float / budget.amount|float * 100) %}
+   <div class="progress mt-2"><div class="progress-bar {% if pct > 100 %}bg-danger{% endif %}" style="width: {{ [pct, 100]|min }}%"></div></div>
+   <p class="small text-muted mt-2">{% if pct > 100 %}Budget exceeded by ₹{{ "%.2f"|format((budget_used-budget.amount)|float) }}.{% else %}{{ "%.1f"|format(pct) }}% of your budget used.{% endif %}</p>
+  {% else %}<p class="text-muted">Set a monthly limit to compare planned and actual spending.</p>{% endif %}
+ </div></div>
+</div>
+<div class="card p-3 mt-4"><div class="d-flex justify-content-between align-items-center"><h2 class="h5 mb-0">Recent transactions</h2><a href="{{ url_for('transactions.list_transactions') }}">View all</a></div>
+ {% if recent %}<div class="table-responsive mt-3"><table class="table align-middle"><thead><tr><th>Date</th><th>Details</th><th>Category</th><th class="text-end">Amount</th></tr></thead><tbody>
+ {% for tx in recent %}<tr><td>{{ tx.transaction_date }}</td><td>{{ tx.description or '—' }}</td><td>{{ tx.category }}</td><td class="text-end {% if tx.kind == 'income' %}text-success{% else %}text-danger{% endif %}">{% if tx.kind == 'income' %}+{% else %}-{% endif %}₹{{ "%.2f"|format(tx.amount|float) }}</td></tr>{% endfor %}
+ </tbody></table></div>{% else %}<p class="text-muted mt-3">No transactions recorded yet.</p>{% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+{% if category_labels %}<script>
+new Chart(document.getElementById('categoryChart'), {
+ type: 'doughnut',
+ data: { labels: {{ category_labels|tojson }}, datasets: [{ data: {{ category_values|tojson }} }] },
+ options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
+</script>{% endif %}
+{% endblock %}

@@ -1,0 +1,14 @@
+body { background: #f5f7fb; color: #1f2937; }
+.navbar-brand { letter-spacing: .2px; }
+.card, .summary-card { border: 0; border-radius: 14px; box-shadow: 0 3px 16px rgba(20,35,60,.05); }
+.summary-card { padding: 1.25rem; min-height: 112px; display: flex; flex-direction: column; gap: .45rem; background: #fff; }
+.summary-card span { color: #64748b; font-size: .92rem; }
+.summary-card strong { font-size: 1.65rem; }
+.summary-card.income { border-left: 4px solid #16a34a; }
+.summary-card.expense { border-left: 4px solid #ea580c; }
+.summary-card.balance { border-left: 4px solid #2563eb; }
+.auth-card { max-width: 440px; margin-top: 5vh; }
+.form-card { max-width: 650px; }
+.table th { color: #64748b; font-weight: 600; font-size: .9rem; }
+.progress { height: 10px; border-radius: 8px; }
+@media (max-width: 576px) { .summary-card strong { font-size: 1.35rem; } main.container { padding-left: 1rem; padding-right: 1rem; } }
